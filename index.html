@@ -2,34 +2,68 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="theme-color" content="#667eea">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="Brain AI">
+    <link rel="manifest" href="manifest.json">
+    <link rel="apple-touch-icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='0.9em' font-size='90'>🧠</text></svg>">
     <title>Brain AI Chatbot</title>
     <style>
         * {
             margin: 0;
             padding: 0;
             box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
         }
         
         body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             height: 100vh;
-            display: flex;
-            justify-content: center;
-            align-items: center;
+            overflow: hidden;
+            position: fixed;
+            width: 100%;
+        }
+        
+        .install-prompt {
+            position: fixed;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: white;
+            padding: 15px 25px;
+            border-radius: 30px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+            display: none;
+            z-index: 1000;
+            animation: slideUp 0.3s;
+        }
+        
+        @keyframes slideUp {
+            from { transform: translate(-50%, 100px); opacity: 0; }
+            to { transform: translate(-50%, 0); opacity: 1; }
+        }
+        
+        .install-prompt button {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 20px;
+            margin-left: 10px;
+            cursor: pointer;
+            font-weight: 600;
         }
         
         .chat-container {
-            width: 90%;
-            max-width: 800px;
-            height: 90vh;
+            width: 100%;
+            height: 100vh;
             background: white;
-            border-radius: 20px;
-            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
             display: flex;
             flex-direction: column;
-            overflow: hidden;
+            position: relative;
         }
         
         .chat-header {
@@ -37,27 +71,37 @@
             color: white;
             padding: 20px;
             text-align: center;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            position: relative;
         }
         
         .chat-header h1 {
-            font-size: 24px;
+            font-size: 22px;
             margin-bottom: 5px;
+            font-weight: 700;
         }
         
         .chat-header p {
-            font-size: 14px;
+            font-size: 13px;
             opacity: 0.9;
+        }
+        
+        .status-bar {
+            font-size: 11px;
+            opacity: 0.8;
+            margin-top: 5px;
         }
         
         .chat-messages {
             flex: 1;
-            padding: 20px;
+            padding: 15px;
             overflow-y: auto;
-            background: #f5f5f5;
+            background: #f8f9fa;
+            -webkit-overflow-scrolling: touch;
         }
         
         .message {
-            margin-bottom: 15px;
+            margin-bottom: 12px;
             display: flex;
             animation: fadeIn 0.3s;
         }
@@ -72,75 +116,84 @@
         }
         
         .message-content {
-            max-width: 70%;
+            max-width: 80%;
             padding: 12px 16px;
-            border-radius: 18px;
+            border-radius: 20px;
             word-wrap: break-word;
+            font-size: 15px;
+            line-height: 1.4;
         }
         
         .message.bot .message-content {
             background: white;
             color: #333;
             border-bottom-left-radius: 4px;
+            box-shadow: 0 1px 2px rgba(0,0,0,0.1);
         }
         
         .message.user .message-content {
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             color: white;
             border-bottom-right-radius: 4px;
+            box-shadow: 0 1px 2px rgba(0,0,0,0.2);
         }
         
         .chat-input-container {
-            padding: 20px;
+            padding: 15px;
             background: white;
             border-top: 1px solid #e0e0e0;
+            padding-bottom: max(15px, env(safe-area-inset-bottom));
         }
         
         .chat-input-wrapper {
             display: flex;
             gap: 10px;
+            align-items: center;
         }
         
         #userInput {
             flex: 1;
-            padding: 12px 16px;
+            padding: 14px 18px;
             border: 2px solid #e0e0e0;
             border-radius: 25px;
-            font-size: 14px;
+            font-size: 16px;
             outline: none;
             transition: border-color 0.3s;
+            background: #f8f9fa;
         }
         
         #userInput:focus {
             border-color: #667eea;
+            background: white;
         }
         
         #sendBtn {
-            padding: 12px 30px;
+            width: 50px;
+            height: 50px;
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             color: white;
             border: none;
-            border-radius: 25px;
+            border-radius: 50%;
             cursor: pointer;
-            font-size: 14px;
-            font-weight: 600;
+            font-size: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
             transition: transform 0.2s;
-        }
-        
-        #sendBtn:hover {
-            transform: scale(1.05);
+            box-shadow: 0 2px 8px rgba(102, 126, 234, 0.4);
         }
         
         #sendBtn:active {
-            transform: scale(0.95);
+            transform: scale(0.9);
         }
         
         .typing-indicator {
             display: none;
             padding: 12px 16px;
             background: white;
-            border-radius: 18px;
+            border-radius: 20px;
             width: fit-content;
+            box-shadow: 0 1px 2px rgba(0,0,0,0.1);
         }
         
         .typing-indicator span {
@@ -165,19 +218,62 @@
             0%, 60%, 100% { transform: translateY(0); }
             30% { transform: translateY(-10px); }
         }
+        
+        .quick-actions {
+            display: flex;
+            gap: 8px;
+            padding: 10px 15px;
+            overflow-x: auto;
+            background: white;
+            border-bottom: 1px solid #e0e0e0;
+            -webkit-overflow-scrolling: touch;
+        }
+        
+        .quick-actions::-webkit-scrollbar {
+            display: none;
+        }
+        
+        .quick-action-btn {
+            padding: 8px 16px;
+            background: #f0f0f0;
+            border: none;
+            border-radius: 20px;
+            font-size: 13px;
+            white-space: nowrap;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+        
+        .quick-action-btn:active {
+            background: #e0e0e0;
+        }
     </style>
 </head>
 <body>
+    <div class="install-prompt" id="installPrompt">
+        <span>📱 Install Brain AI App</span>
+        <button onclick="installApp()">Install</button>
+        <button onclick="dismissInstall()" style="background: #ccc;">Later</button>
+    </div>
+
     <div class="chat-container">
         <div class="chat-header">
-            <h1>🧠 Brain AI Chatbot</h1>
-            <p>Ask me anything about the human brain!</p>
+            <h1>🧠 Brain AI</h1>
+            <p>Your Personal Brain Assistant</p>
+            <div class="status-bar">● Online</div>
+        </div>
+        
+        <div class="quick-actions">
+            <button class="quick-action-btn" onclick="quickQuestion('What is the brain?')">What is the brain?</button>
+            <button class="quick-action-btn" onclick="quickQuestion('Brain weight')">Brain weight</button>
+            <button class="quick-action-btn" onclick="quickQuestion('Brain function')">Brain function</button>
+            <button class="quick-action-btn" onclick="quickQuestion('Brain health')">Brain health</button>
         </div>
         
         <div class="chat-messages" id="chatMessages">
             <div class="message bot">
                 <div class="message-content">
-                    Hello! I'm your Brain AI assistant. I can answer questions about the human brain, its functions, and how it works. What would you like to know?
+                    👋 Hello! I'm your Brain AI assistant. I can answer questions about the human brain, its functions, and how it works. What would you like to know?
                 </div>
             </div>
         </div>
@@ -185,19 +281,42 @@
         <div class="chat-input-container">
             <div class="chat-input-wrapper">
                 <input type="text" id="userInput" placeholder="Ask about the brain..." onkeypress="handleKeyPress(event)">
-                <button id="sendBtn" onclick="sendMessage()">Send</button>
+                <button id="sendBtn" onclick="sendMessage()">➤</button>
             </div>
         </div>
     </div>
 
     <script>
+        let deferredPrompt;
+        
+        window.addEventListener('beforeinstallprompt', (e) => {
+            e.preventDefault();
+            deferredPrompt = e;
+            document.getElementById('installPrompt').style.display = 'block';
+        });
+
+        function installApp() {
+            if (deferredPrompt) {
+                deferredPrompt.prompt();
+                deferredPrompt.userChoice.then((choiceResult) => {
+                    deferredPrompt = null;
+                    document.getElementById('installPrompt').style.display = 'none';
+                });
+            }
+        }
+
+        function dismissInstall() {
+            document.getElementById('installPrompt').style.display = 'none';
+        }
+
         const knowledgeBase = {
             "brain complexity": "The brain is the most complex part of the human body. This three-pound organ is the seat of intelligence, interpreter of the senses, initiator of body movement, and controller of behavior.",
             "brain protection": "The brain lies in its bony shell and is washed by protective fluid. It is the source of all the qualities that define our humanity and is the crown jewel of the human body.",
             "brain health": "Understanding how the healthy brain works helps us know how to keep our brain healthy and what happens when the brain doesn't work like it should.",
             "brain weight": "The human brain weighs approximately three pounds.",
             "brain function": "The brain serves as the seat of intelligence, interpreter of the senses, initiator of body movement, and controller of behavior.",
-            "brain location": "The brain is located in a bony shell (the skull) and is washed by protective fluid (cerebrospinal fluid)."
+            "brain location": "The brain is located in a bony shell (the skull) and is washed by protective fluid (cerebrospinal fluid).",
+            "what is the brain": "The brain is the most complex part of the human body. This three-pound organ is the seat of intelligence, interpreter of the senses, initiator of body movement, and controller of behavior. It is the crown jewel of the human body."
         };
 
         function findBestMatch(query) {
@@ -232,14 +351,14 @@
             }
 
             if (userMessage.toLowerCase().includes('hello') || userMessage.toLowerCase().includes('hi')) {
-                return "Hello! I'm here to help you learn about the human brain. What would you like to know?";
+                return "Hello! 👋 I'm here to help you learn about the human brain. What would you like to know?";
             }
 
             if (userMessage.toLowerCase().includes('thank')) {
-                return "You're welcome! Feel free to ask me anything else about the brain.";
+                return "You're welcome! 😊 Feel free to ask me anything else about the brain.";
             }
 
-            return "I'm specialized in answering questions about the human brain. You can ask me about brain complexity, brain protection, brain health, brain weight, brain function, or brain location. What would you like to know?";
+            return "I'm specialized in answering questions about the human brain. Try asking about brain complexity, protection, health, weight, function, or location. You can also use the quick action buttons above! 💡";
         }
 
         function addMessage(content, isUser) {
@@ -294,13 +413,22 @@
                 removeTypingIndicator();
                 const response = generateResponse(message);
                 addMessage(response, false);
-            }, 1000);
+            }, 800);
+        }
+
+        function quickQuestion(question) {
+            document.getElementById('userInput').value = question;
+            sendMessage();
         }
 
         function handleKeyPress(event) {
             if (event.key === 'Enter') {
                 sendMessage();
             }
+        }
+
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.register('sw.js').catch(() => {});
         }
     </script>
 </body>
